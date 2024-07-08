@@ -10,24 +10,24 @@ export default defineEventHandler(async (event) => {
   const { audioUrl } = await readBody(event);
 
   try {
-    const transcript = await client.intelligence.v2.transcripts.create({
-      mediaUrl: audioUrl,
-      channel: {},
-      serviceSid: "GA164674f4f7e47a5c734f519381870d6d"
-    });
+    const transcript = await client.intelligence.v2.transcripts
+      .create({
+        channel: {
+          media_properties: {
+            source_sid: null,
+            media_url: audioUrl,
+          },
+          participants: [],
+        },
+        serviceSid: `${process.env.TWILIO_SERVICE_SID}`,
+      })
+      .catch((err) => {
+        console.error({ err });
+      });
 
-    console.log({ transcript });
-
-    // const summary = await summarizeText(transcription.transcriptionText)
-
-    // return { summary }
+    return transcript;
   } catch (error) {
     console.error("Error transcribing audio:", error);
     return { error: "Failed to transcribe audio" };
   }
 });
-
-async function summarizeText(text: string): Promise<string> {
-  // Implement text summarization logic here
-  return text.substring(0, 200) + "..."; // Placeholder for actual summarization
-}

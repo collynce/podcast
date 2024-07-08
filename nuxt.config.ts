@@ -7,6 +7,9 @@ export default defineNuxtConfig({
     "@nuxtjs/color-mode",
     "@pinia/nuxt",
   ],
+  colorMode: {
+    classSuffix: ''
+  },
   shadcn: {
     /**
      * Prefix for all the imported component
