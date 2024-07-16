@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from "vue";
 import AlbumArtwork from "../components/AlbumArtwork.vue";
 import Menu from "../components/Menu.vue";
 import PodcastEmptyPlaceholder from "../components/PodcastEmptyPlaceholder.vue";
@@ -7,6 +8,60 @@ import Sidebar from "../components/Sidebar.vue";
 import { listenNowAlbums, madeForYouAlbums } from "../components/data/albums";
 import { playlists } from "../components/data/playlists";
 import { PlusCircledIcon } from "@radix-icons/vue";
+
+const user = ref({});
+const accessToken = useCookie("access_token");
+const podcasts = ref([]);
+const episodes = ref([]);
+
+const login = () => {
+  window.location.href = "/api/login";
+};
+
+if (accessToken.value) {
+  const { data } = await useFetch("https://api.spotify.com/v1/me", {
+    headers: {
+      Authorization: `Bearer ${accessToken.value}`,
+    },
+  });
+  user.value = data.value;
+}
+
+const getPodcasts = async () => {
+  const data = await $fetch("/api/podcasts");
+
+  podcasts.value = data;
+};
+
+const getEpisodes = async (id: string) => {
+  const data = await $fetch("/api/episodes", {
+    method: "POST",
+    body: { id },
+  });
+  episodes.value = data;
+};
+
+const transcribe = async (audioUrl: string) => {
+  const data = await $fetch("/api/transcribe", {
+    method: "POST",
+    body: { audioUrl },
+  });
+};
+
+const filterPodcasts = (item: {
+  show: { name: any; publisher: any; images: { url: any }[] };
+}) => {
+  console.log({ item });
+  return {
+    name: item.show.name,
+    artist: item.show.publisher,
+    cover: item.show.images[0].url,
+  };
+};
+
+onMounted(() => {
+  getPodcasts();
+});
 </script>
 
 <template>
@@ -62,9 +117,9 @@ import { PlusCircledIcon } from "@radix-icons/vue";
                     <ScrollArea>
                       <div class="flex space-x-4 pb-4">
                         <AlbumArtwork
-                          v-for="album in listenNowAlbums"
-                          :key="album.name"
-                          :album="album"
+                          v-for="(album, idx) in podcasts.items"
+                          :key="idx"
+                          :album="filterPodcasts(album)"
                           class="w-[250px]"
                           aspect-ratio="portrait"
                           :width="250"
