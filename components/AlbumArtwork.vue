@@ -10,6 +10,7 @@ interface AlbumArtworkProps {
   width?: number;
   height?: number;
 }
+
 withDefaults(defineProps<AlbumArtworkProps>(), {
   aspectRatio: "portrait",
 });
@@ -19,7 +20,7 @@ withDefaults(defineProps<AlbumArtworkProps>(), {
   <div :class="cn('space-y-3', $attrs.class ?? '')">
     <ContextMenu>
       <ContextMenuTrigger>
-        <div class="overflow-hidden rounded-md">
+        <div class="overflow-hidden rounded-md cursor-pointer" @click="$emit('get-episodes', album)">
           <img
             :src="album.cover"
             :alt="album.name"

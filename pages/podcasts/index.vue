@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import AlbumArtwork from "../components/AlbumArtwork.vue";
-import Menu from "../components/Menu.vue";
-import PodcastEmptyPlaceholder from "../components/PodcastEmptyPlaceholder.vue";
-import Sidebar from "../components/Sidebar.vue";
+import AlbumArtwork from "../../components/AlbumArtwork.vue";
+import Menu from "../../components/Menu.vue";
+import PodcastEmptyPlaceholder from "../../components/PodcastEmptyPlaceholder.vue";
+import Sidebar from "../../components/Sidebar.vue";
 
-import { listenNowAlbums, madeForYouAlbums } from "../components/data/albums";
-import { playlists } from "../components/data/playlists";
+import { listenNowAlbums, madeForYouAlbums } from "../../components/data/albums";
+import { playlists } from "../../components/data/playlists";
 import { PlusCircledIcon } from "@radix-icons/vue";
 
 const user = ref({});
@@ -33,12 +33,13 @@ const getPodcasts = async () => {
   podcasts.value = data;
 };
 
-const getEpisodes = async (id: string) => {
+const getEpisodes = async (event: any) => {
   const data = await $fetch("/api/episodes", {
     method: "POST",
-    body: { id },
+    body: { id: event.id },
   });
   episodes.value = data;
+  navigateTo("podcasts/" + event.id);
 };
 
 const transcribe = async (audioUrl: string) => {
@@ -51,16 +52,18 @@ const transcribe = async (audioUrl: string) => {
 const filterPodcasts = (item: {
   show: { name: any; publisher: any; images: { url: any }[] };
 }) => {
-  console.log({ item });
   return {
     name: item.show.name,
     artist: item.show.publisher,
     cover: item.show.images[0].url,
+    id: item.show.id,
   };
 };
 
 onMounted(() => {
-  getPodcasts();
+  if (!podcasts.value.length) {
+    getPodcasts();
+  }
 });
 </script>
 
@@ -124,6 +127,7 @@ onMounted(() => {
                           aspect-ratio="portrait"
                           :width="250"
                           :height="330"
+                          @get-episodes="getEpisodes"
                         />
                       </div>
                       <ScrollBar orientation="horizontal" />
