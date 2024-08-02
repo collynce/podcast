@@ -34,5 +34,8 @@
     "@radix-icons/vue": "^1.0.0",
     "@spotify/web-api-ts-sdk": "^1.2.0",
     "typescript": "^5.5.2"
+  },
+  "overrides": {
+    "vue": "latest"
   }
 }
