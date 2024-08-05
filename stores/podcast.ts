@@ -17,6 +17,12 @@ export const useMainStore = defineStore("mainStore", () => {
 
   const getEpisodes = computed((): [] => state.episodes);
 
+  const getPodcastById = (id: string | string[]) => {
+    return state.podcasts.items.find((item: {
+      show: any; id: string 
+}) => item.show.id === id);
+  };
+
   const setEpisodes = (episodes: []): void => {
     state.episodes = episodes;
   };
@@ -30,5 +36,6 @@ export const useMainStore = defineStore("mainStore", () => {
     getEpisodes,
     setEpisodes,
     setPodcasts,
+    getPodcastById,
   };
 });
