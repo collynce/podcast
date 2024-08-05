@@ -9,8 +9,10 @@ import { playlists } from "./data/playlists";
         <div class="grid lg:grid-cols-5">
           <Sidebar :playlists="playlists" class="hidden lg:block" />
           <div class="col-span-3 lg:col-span-4 lg:border-l">
-            <div class="h-full">
-              <slot></slot>
+            <div class="h-full w-full">
+              <ScrollArea class="h-screen flex">
+                <slot></slot>
+              </ScrollArea>
             </div>
           </div>
         </div>
