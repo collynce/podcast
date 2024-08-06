@@ -1,27 +1,29 @@
 <script setup lang="ts">
 import { PlayIcon } from '@radix-icons/vue';
 import type { Podcast, Episode } from '~/stores/podcast';
+import { ref } from 'vue'
 
-const podcastHelper = usePodcasts();
-const episodes = ref<Episode[]>([]);
+const {getPodcasts, getEpisodes, setPlayingNow, episodes, podcasts, getPodcastById} = usePodcasts();
+const latestEpisodes = ref<Episode[]>([]);
 const podcast = ref<Podcast | null>(null);
 const route = useRoute();
 const loading = ref(true);
+const summarizing = ref<string | null>(null)
 
 const getItems = async () => {
   loading.value = true;
-  if (!podcastHelper.podcasts.value.items.length) {
-    await podcastHelper.getPodcasts();
+  if (!podcasts.value.items.length) {
+    await getPodcasts();
   }
-  await podcastHelper.getEpisodes(route.params.id as string);
-  episodes.value = podcastHelper.episodes.value.items || [];
+  await getEpisodes(route.params.id as string);
+  latestEpisodes.value = episodes.value.items || [];
 
-  podcast.value = podcastHelper.getPodcastById(route.params.id as string) || null;
+  podcast.value = getPodcastById(route.params.id as string) || null;
   loading.value = false;
 };
 
 const playEpisode = (episode: Episode) => {
-  usePodcasts().setPlayingNow(episode);
+  setPlayingNow(episode);
 };
 
 const formatDuration = (ms: number) => {
@@ -29,6 +31,37 @@ const formatDuration = (ms: number) => {
   const seconds = Math.floor((ms % 60000) / 1000);
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 };
+
+const summarizeEpisode = async (episode: Episode) => {
+  if (summarizing.value === episode.id) return
+  
+  summarizing.value = episode.id
+  try {
+    const transcript = await $fetch('/api/transcribe', {
+      method: 'POST',
+      body: { audioUrl: episode.audio_preview_url }
+    }).catch(error=>{
+      throw new Error(error)
+    })
+    
+    
+    // Store the transcript SID for future use if needed
+    // episode.transcriptSid = transcript.sid
+    
+    // For now, we'll use the transcript status as a placeholder for the summary
+    // episode.summary = `Transcript status: ${transcript.status}`
+    
+    // TODO: Implement actual summarization logic once the transcript is complete
+    // This might involve polling the Twilio API for the completed transcript
+    // and then sending it to a summarization service
+    
+  } catch (error) {
+    console.error('Failed to transcribe episode:', error)
+    episode.summary = 'Failed to generate summary'
+  } finally {
+    summarizing.value = null
+  }
+}
 
 onMounted(() => {
   getItems();
@@ -67,19 +100,27 @@ onMounted(() => {
           </div>
         </template>
         <template v-else>
-          <div v-for="episode in episodes" :key="episode.id"
-            class="flex items-center space-x-4 hover:bg-muted/50 p-4 rounded-lg transition-colors">
-            <img :src="episode.images[0].url" alt="Episode Cover" class="w-20 h-20 object-cover rounded-md" />
-            <div class="flex-grow">
-              <h3 class="text-lg font-semibold">{{ episode.name }}</h3>
-              <p class="text-sm text-muted-foreground line-clamp-2" v-html="episode.html_description"></p>
-              <p class="text-xs text-muted-foreground mt-1.5 font-bold">
-                {{ new Date(episode.release_date).toLocaleDateString() }} · {{ formatDuration(episode.duration_ms) }}
-              </p>
+          <div v-for="episode in latestEpisodes" :key="episode.id"
+            class="flex flex-col space-y-2 hover:bg-muted/50 p-4 rounded-lg transition-colors">
+            <div class="flex items-center space-x-4">
+              <img :src="episode.images[0].url" alt="Episode Cover" class="w-20 h-20 object-cover rounded-md" />
+              <div class="flex-grow">
+                <h3 class="text-lg font-semibold">{{ episode.name }}</h3>
+                <p class="text-sm text-muted-foreground line-clamp-2" v-html="episode.html_description"></p>
+                <p class="text-xs text-muted-foreground mt-1.5 font-bold">
+                  {{ new Date(episode.release_date).toLocaleDateString() }} · {{ formatDuration(episode.duration_ms) }}
+                </p>
+              </div>
+              <div class="flex flex-col items-end">
+                <Button variant="ghost" size="icon" @click="playEpisode(episode)">
+                  <PlayIcon class="h-6 w-6" />
+                </Button>
+                <Button @click="summarizeEpisode(episode)" :disabled="summarizing === episode.id">
+                  {{ summarizing === episode.id ? 'Transcribing...' : 'Transcribe' }}
+                </Button>
+              </div>
             </div>
-            <Button variant="ghost" size="icon" @click="playEpisode(episode)">
-              <PlayIcon class="h-6 w-6" />
-            </Button>
+            <!-- <p v-if="episode.summary" class="mt-2 text-sm text-muted-foreground">{{ episode.summary }}</p> -->
           </div>
         </template>
       </div>

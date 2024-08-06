@@ -12,6 +12,8 @@ export type Podcast = {
 };
 
 export type Episode = {
+  transcriptSid: any;
+  summary: string;
   id: string;
   name: string;
   description: string;
