@@ -43,21 +43,28 @@ export default defineEventHandler(async (event) => {
 
   try {
     const response = await axios(authOptions);
-    const { access_token, refresh_token } = response.data;
+    const { access_token, refresh_token, expires_in } = response.data;
 
-    // Set cookies for access and refresh tokens
+    // Set cookie for access token with expiration
     setCookie(event, "access_token", access_token, {
       httpOnly: false,
-      secure: false,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: expires_in,
+      path: "/",
     });
+
+    // Set cookie for refresh token with a longer expiration (e.g., 30 days)
     setCookie(event, "refresh_token", refresh_token, {
       httpOnly: false,
-      secure: false,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+      path: "/",
     });
 
     // Redirect to the Nuxt frontend
     return sendRedirect(event, "/");
   } catch (error) {
+    console.error("Error in token exchange:", error);
     return sendRedirect(event, "/?error=invalid_token");
   }
 });
