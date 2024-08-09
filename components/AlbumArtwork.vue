@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { Album } from "./data/albums";
-import { playlists } from "./data/playlists";
 import { PlusCircledIcon } from "@radix-icons/vue";
 import { cn } from "@/lib/utils";
 
@@ -20,7 +19,10 @@ withDefaults(defineProps<AlbumArtworkProps>(), {
   <div :class="cn('space-y-3', $attrs.class ?? '')">
     <ContextMenu>
       <ContextMenuTrigger>
-        <div class="overflow-hidden rounded-md cursor-pointer" @click="$emit('get-episodes', album)">
+        <div
+          class="overflow-hidden rounded-md cursor-pointer"
+          @click="$emit('get-episodes', album)"
+        >
           <img
             :src="album.cover"
             :alt="album.name"
@@ -45,23 +47,6 @@ withDefaults(defineProps<AlbumArtworkProps>(), {
               New Playlist
             </ContextMenuItem>
             <ContextMenuSeparator />
-            <ContextMenuItem v-for="playlist in playlists" :key="playlist">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                class="mr-2 h-4 w-4"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  d="M21 15V6M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM12 12H3M16 6H3M12 18H3"
-                />
-              </svg>
-              {{ playlist }}
-            </ContextMenuItem>
           </ContextMenuSubContent>
         </ContextMenuSub>
         <ContextMenuSeparator />
